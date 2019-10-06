@@ -1,6 +1,6 @@
 {
   "sellOrders": [],
-  "buyOrders": []
+  "buyOrders": [],
   "averagePrice": null,
-  "unrecoverable": false,
+  "unrecoverable": false
 }
