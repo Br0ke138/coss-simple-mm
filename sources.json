@@ -1,0 +1,12 @@
+{
+  "manual": {
+    "enabled": false,
+    "price": 1
+  },
+  "cmc": {
+    "enabled": true,
+    "interval": 30000,
+    "quoteId": 1027,
+    "assetId": 1989
+  }
+}

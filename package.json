@@ -1,0 +1,16 @@
+{
+  "name": "simpleMM",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Julian Schmidt aka. Br0ke138",
+  "license": "GNU GPLv3",
+  "dependencies": {
+    "ccxt": "1.18.823",
+    "lowdb": "1.0.0",
+    "request": "^2.88.0"
+  }
+}
