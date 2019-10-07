@@ -65,19 +65,23 @@ function initPolling() {
 }
 
 async function startBot() {
-    initPolling();
-    await loadConfigAndTradingInfo();
-
-    if (sellOrders.length > 0 || buyOrders.length > 0) {
-        console.log('Found existing MM structure. Bot will cancel all orders and build new MM structure');
-        await cancelAllOrders();
-        await buildMMStructure();
+    if (process.env.RUN_IN_HEROKU) {
+        console.log(process.env);
     } else {
-        console.log('No MM structure found. Bot will build it now');
-        await buildMMStructure();
+        initPolling();
+        await loadConfigAndTradingInfo();
+
+        if (sellOrders.length > 0 || buyOrders.length > 0) {
+            console.log('Found existing MM structure. Bot will cancel all orders and build new MM structure');
+            await cancelAllOrders();
+            await buildMMStructure();
+        } else {
+            console.log('No MM structure found. Bot will build it now');
+            await buildMMStructure();
+        }
+        console.log('----------------- Start watching price -----------------');
+        checkForMovement();
     }
-    console.log('----------------- Start watching price -----------------');
-    checkForMovement();
 }
 
 async function buildMMStructure() {
