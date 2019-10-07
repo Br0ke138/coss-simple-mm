@@ -10,9 +10,8 @@ const request = require('request');
 db.defaults({sellOrders: [], buyOrders: [], averagePrice: null, unrecoverable: false})
     .write();
 
-const config = require('./config.json');
-const sources = require('./sources.json');
-const MAX_FEE = 1 - (0.25 / 100);
+const config = require('./config/config.json');
+const sources = require('./config/sources.json');
 
 // --------------------------------------------------------
 let priceInfoSources = 0;
@@ -30,11 +29,6 @@ let sellOrders = [];
 let buyOrders = [];
 let averagePrice;
 let prevChange;
-
-let cmc = {
-    asset: null,
-    quote: null
-};
 
 // --------------------------------------------------------
 
@@ -60,6 +54,9 @@ async function fetchCMC(quote, asset) {
 }
 
 function initPolling() {
+    if (sources.manual.enabled) {
+        priceInfoSources++;
+    }
     if (sources.cmc.enabled) {
         priceInfoSources++;
         fetchCMC(sources.cmc.quoteId, sources.cmc.assetId);
@@ -72,16 +69,9 @@ async function startBot() {
     await loadConfigAndTradingInfo();
 
     if (sellOrders.length > 0 || buyOrders.length > 0) {
-        console.log('Found existing MM structure. Bot will check orders');
-        const orderCheck = await tryCatch(canContinue());
-        if (orderCheck.success) {
-            console.log(orderCheck.result);
-            console.log('Bot will continue from where it stopped');
-        } else {
-            console.log(orderCheck.error);
-            console.log('Please make sure to cancel all Orders from the bot and then clear the content of /data/db.json');
-            process.exit(1);
-        }
+        console.log('Found existing MM structure. Bot will cancel all orders and build new MM structure');
+        await cancelAllOrders();
+        await buildMMStructure();
     } else {
         console.log('No MM structure found. Bot will build it now');
         await buildMMStructure();
@@ -106,7 +96,7 @@ async function buildMMStructure() {
 
     if (config.live) {
         console.log('Found following Prices: ');
-        if (sources.manual.enabled) console.log('Manual: ' + sources.manual.price);
+        if (sources.manual.enabled) console.log('(WIP) Manual: ' + sources.manual.price);
         if (sources.cmc.enabled) console.log('Coinmarketcap: ' + prices.cmc);
         console.log('Avg Price: ', calculateAvgPrice(), '\n');
         averagePrice = calculateAvgPrice();
@@ -120,7 +110,8 @@ async function buildMMStructure() {
             lowestSellPrice = sellPrice.result;
         } else {
             console.log(sellPrice.error);
-            process.exit(1);
+            buildMMStructure();
+            return;
         }
 
         const buyPrice = await tryCatch(getHighestBuyPriceWithRetry());
@@ -128,7 +119,8 @@ async function buildMMStructure() {
             highestBuyPrice = buyPrice.result;
         } else {
             console.log(buyPrice.error);
-            process.exit(1);
+            buildMMStructure();
+            return;
         }
 
         console.log('lowestSellPrice', lowestSellPrice);
@@ -150,7 +142,6 @@ async function buildMMStructure() {
                     console.log('Placed sell order with price: ' + currentSellPrice + ' and amount: ' + amount);
                 } else {
                     console.log(sellOrder.error);
-                    process.exit(1);
                 }
             }
         }
@@ -171,11 +162,12 @@ async function buildMMStructure() {
                     console.log('Placed buy order with price: ' + currentBuyPrice + ' and amount: ' + amount);
                 } else {
                     console.log(buyOrder.error);
-                    process.exit(1);
                 }
             }
         }
 
+        console.log('Waiting 10 sec, because API restriction ...');
+        await timeout(10000);
     } else {
         await buildMMStructureDemo();
     }
@@ -248,7 +240,14 @@ async function buildMMStructureDemo() {
 }
 
 function calculateAvgPrice() {
-    return prices.cmc.toFixed(pricePrecision);
+    let sum = 0;
+    if (sources.manual.enabled) {
+        sum = sum + parseFloat(sources.manual.price);
+    }
+    if (sources.cmc.enabled) {
+        sum = sum + parseFloat(prices.cmc.toFixed(pricePrecision));
+    }
+    return sum / priceInfoSources;
 }
 
 function calculateDifference(num1, num2) {
@@ -313,40 +312,6 @@ async function loadConfigAndTradingInfo() {
 
     console.log('--------------- Loaded ---------------');
 }
-
-async function canContinue() {
-    return new Promise(async (resolve, reject) => {
-        for (sellOrder of sellOrders) {
-            console.log('checking sell order with id: ' + sellOrder);
-            const order = await tryCatch(fetchOrderWithRetry(sellOrder));
-            if (order.success) {
-                if (order.result.status === 'canceled') {
-                    reject('Sell Order with id: ' + sellOrder + ' was canceled by User');
-                    return;
-                }
-            } else {
-                reject('Unable to fetch Sell Order with id: ' + sellOrder);
-                return;
-            }
-        }
-        for (buyOrder of buyOrders) {
-            console.log('checking buy order with id: ' + buyOrder);
-            const order = await tryCatch(fetchOrderWithRetry(buyOrder));
-            if (order.success) {
-                if (order.result.status === 'canceled') {
-                    reject('Buy Order with id: ' + buyOrder + ' was canceled by User');
-                    return;
-                }
-            } else {
-                reject('Unable to fetch Buy Order with id: ' + sellOrder);
-                return;
-            }
-        }
-        resolve('All orders in place');
-    });
-}
-
-
 
 function timeout(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
@@ -484,12 +449,13 @@ async function cancelOrderWithRetry(id, retries = 5) {
 
 // Cancel all orders
 async function cancelAllOrders(retries = 3) {
-    console.log('Cancelling all sell Orders');
+    console.log('Cancelling all Orders');
     return new Promise(async (resolve, reject) => {
         const cancelSellOrders = await tryCatch(cancelAllSellOrders());
         const cancelBuyOrders = await tryCatch(cancelAllBuyOrders());
 
         if (cancelSellOrders.success && cancelBuyOrders.success) {
+            db.set('averagePrice', null).write();
             resolve(true);
             return;
         }
