@@ -34,6 +34,9 @@ npm install
 node index
 ```
 
+# Heroku
+[![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy?template=https://github.com/Br0ke138/coss-simple-mm/tree/master)
+
 # config.json
 ```json
 {  
