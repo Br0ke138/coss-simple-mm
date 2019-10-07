@@ -25,7 +25,7 @@
     },
     "CONFIG_ALLOW_TAKER": {
       "description": "Should the bot also take orders",
-      "value": false
+      "value": "false"
     },
     "CONFIG_SELL_LOTS": {
       "description": "Comma seperated list of the sell lots",
@@ -49,11 +49,11 @@
     },
     "CONFIG_LIVE": {
       "description": "Set only to true, if you really want to place orders with these settings",
-      "value": false
+      "value": "false"
     },
     "SOURCES_MANUAL_ENABLED": {
       "description": "Enables the manual source",
-      "value": false
+      "value": "false"
     },
     "SOURCES_MANUAL_PRICE": {
       "description": "Price of the manual source",
