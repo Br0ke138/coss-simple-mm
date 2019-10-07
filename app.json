@@ -7,7 +7,7 @@
   "env": {
     "RUN_IN_HEROKU": {
       "description": "Leave this to true",
-      "value": true
+      "value": "true"
     },
     "CONFIG_PUBLIC_KEY": {
       "description": "Your public key",
@@ -61,19 +61,19 @@
     },
     "SOURCES_CMC_ENABLED": {
       "description": "Enables Coinmarketcap as a source",
-      "value": true
+      "value": "true"
     },
     "SOURCES_CMC_INTERVAL": {
       "description": "Time in milliseconds to refresh data",
-      "value": 30000
+      "value": "30000"
     },
     "SOURCES_ASSET_ID": {
       "description": "The coinmarketcap id of the asset (Left coin of pair)",
-      "value": 1989
+      "value": "1989"
     },
     "SOURCES_QUOTE_ID": {
       "description": "The coinmarketcap id of the quote (Right coin of pair)",
-      "value": 1027
+      "value": "1027"
     }
   }
 }
