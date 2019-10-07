@@ -8,5 +8,9 @@
     "interval": 30000,
     "assetId": 1989,
     "quoteId": 1027
+  },
+  "coss": {
+    "enabled": false,
+    "interval": 10000
   }
 }

@@ -15,10 +15,10 @@ const sources = require('./config/sources.json');
 
 // --------------------------------------------------------
 let priceInfoSources = 0;
-let fetchedAllPrices = false;
 let prices = {
     manual: sources.manual.price,
-    cmc: null
+    cmc: null,
+    coss: null
 };
 
 let minOrderSize;
@@ -49,7 +49,22 @@ async function fetchCMC(quote, asset) {
             return;
         }
         prices.cmc = body.data.quote[quote].price;
-        fetchedAllPrices = true;
+    });
+}
+
+async function fetchCoss() {
+    request({
+        url: 'https://trade.coss.io/c/api/v1/market-price?symbol=' + config.pair.replace('/', '_'),
+        json: true
+    }, function (error, response, body) {
+        if (error) {
+            console.log('couldn´t fetch price from coss');
+            console.log(error);
+            return;
+        }
+        if (body && body.length > 0 && body[0] && body[0].price) {
+            prices.coss = parseFloat(body[0].price);
+        }
     });
 }
 
@@ -61,6 +76,11 @@ function initPolling() {
         priceInfoSources++;
         fetchCMC(sources.cmc.quoteId, sources.cmc.assetId);
         setInterval(fetchCMC, sources.cmc.interval, sources.cmc.quoteId, sources.cmc.assetId);
+    }
+    if (sources.coss.enabled) {
+        priceInfoSources++;
+        fetchCoss();
+        setInterval(fetchCoss, sources.coss.interval);
     }
 }
 
@@ -83,6 +103,8 @@ async function startBot() {
         sources.cmc.interval = parseInt(process.env.SOURCES_CMC_INTERVAL, 10);
         sources.cmc.assetId = parseInt(process.env.SOURCES_ASSET_ID, 10);
         sources.cmc.quoteId = parseInt(process.env.SOURCES_QUOTE_ID, 10);
+        sources.coss.enabled = process.env.SOURCES_COSS_ENABLED === 'true';
+        sources.coss.interval = parseInt(process.env.SOURCES_COSS_INTERVAL);
     }
     initPolling();
     await loadConfigAndTradingInfo();
@@ -100,7 +122,7 @@ async function startBot() {
 }
 
 async function buildMMStructure() {
-    if (!fetchedAllPrices) {
+    if (((sources.cmc.enabled && prices.cmc) || !sources.cmc.enabled) && ((sources.coss.enabled && prices.coss) || !sources.coss.enabled)) {
         console.log('Waiting for all prices ...');
         await timeout(1000);
         buildMMStructure();

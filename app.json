@@ -63,7 +63,8 @@
     },
     "SOURCES_MANUAL_PRICE": {
       "description": "Price of the manual source",
-      "value": "1"
+      "value": "1",
+      "required": false
     },
     "SOURCES_CMC_ENABLED": {
       "description": "Enables Coinmarketcap as a source",
@@ -71,15 +72,27 @@
     },
     "SOURCES_CMC_INTERVAL": {
       "description": "Time in milliseconds to refresh data",
-      "value": "30000"
+      "value": "30000",
+      "required": false
     },
     "SOURCES_ASSET_ID": {
       "description": "The coinmarketcap id of the asset (Left coin of pair)",
-      "value": "1989"
+      "value": "1989",
+      "required": false
     },
     "SOURCES_QUOTE_ID": {
       "description": "The coinmarketcap id of the quote (Right coin of pair)",
-      "value": "1027"
+      "value": "1027",
+      "required": false
+    },
+    "SOURCES_COSS_ENABLED": {
+      "description": "Enables coss.io as a source",
+      "value": "false"
+    },
+    "SOURCES_COSS_INTERVAL": {
+      "description": "TTime in milliseconds to refresh data",
+      "value": "10000",
+      "required": false
     }
   }
 }
