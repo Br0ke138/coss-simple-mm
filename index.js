@@ -288,6 +288,9 @@ function calculateAvgPrice() {
     if (sources.cmc.enabled) {
         sum = sum + parseFloat(prices.cmc.toFixed(pricePrecision));
     }
+    if (sources.coss.enabled) {
+        sum = sum + parseFloat(prices.coss.toFixed(pricePrecision));
+    }
     return sum / priceInfoSources;
 }
 
