@@ -122,7 +122,7 @@ async function startBot() {
 }
 
 async function buildMMStructure() {
-    if (((sources.cmc.enabled && prices.cmc) || !sources.cmc.enabled) && ((sources.coss.enabled && prices.coss) || !sources.coss.enabled)) {
+    if (!((sources.cmc.enabled && prices.cmc) || !sources.cmc.enabled) || !((sources.coss.enabled && prices.coss) || !sources.coss.enabled)) {
         console.log('Waiting for all prices ...');
         await timeout(1000);
         buildMMStructure();
@@ -139,6 +139,7 @@ async function buildMMStructure() {
         console.log('Found following Prices: ');
         if (sources.manual.enabled) console.log('(WIP) Manual: ' + sources.manual.price);
         if (sources.cmc.enabled) console.log('Coinmarketcap: ' + prices.cmc);
+        if (sources.coss.enabled) console.log('Coss: ' + prices.coss);
         console.log('Avg Price: ', calculateAvgPrice(), '\n');
         averagePrice = calculateAvgPrice();
         db.set('averagePrice', averagePrice).write();
