@@ -66,25 +66,41 @@ function initPolling() {
 
 async function startBot() {
     if (process.env.RUN_IN_HEROKU) {
-        console.log(process.env);
-    } else {
-        initPolling();
-        await loadConfigAndTradingInfo();
+        config.publicKey = process.env.CONFIG_PUBLIC_KEY;
+        config.privateKey = process.env.CONFIG_PRIVATE_KEY;
+        config.pair = process.env.CONFIG_PAIR;
+        config.allowTaker = process.env.CONFIG_ALLOW_TAKER === 'true';
+        config.sellLots = process.env.CONFIG_SELL_LOTS.split(',');
+        config.sellSpreads = process.env.CONFIG_SELL_SPREADS.split(',');
+        config.buyLots = process.env.CONFIG_BUY_LOTS.split(',');
+        config.buySpreads = process.env.CONFIG_BUY_SPREADS.split(',');
+        config.priceChangeTrigger = parseFloat(process.env.CONFIG_PRICE_CHANGE_TRIGGER);
+        config.live = process.env.CONFIG_LIVE === 'true';
 
-        if (sellOrders.length > 0 || buyOrders.length > 0) {
-            console.log('Found existing MM structure. Bot will cancel all orders and build new MM structure');
-            await cancelAllOrders();
-            await buildMMStructure();
-        } else {
-            console.log('No MM structure found. Bot will build it now');
-            await buildMMStructure();
-        }
-        console.log('----------------- Start watching price -----------------');
-        checkForMovement();
+        sources.manual.enabled = process.env.SOURCES_MANUAL_ENABLED === 'true';
+        sources.manual.price = parseFloat(process.env.SOURCES_MANUAL_PRICE);
+        sources.cmc.enabled = process.env.SOURCES_CMC_ENABLED === 'true';
+        sources.cmc.interval = parseInt(process.env.SOURCES_CMC_INTERVAL, 10);
+        sources.cmc.assetId = parseInt(process.env.SOURCES_ASSET_ID, 10);
+        sources.cmc.quoteId = parseInt(process.env.SOURCES_QUOTE_ID, 10);
     }
+    initPolling();
+    await loadConfigAndTradingInfo();
+
+    if (sellOrders.length > 0 || buyOrders.length > 0) {
+        console.log('Found existing MM structure. Bot will cancel all orders and build new MM structure');
+        await cancelAllOrders();
+        await buildMMStructure();
+    } else {
+        console.log('No MM structure found. Bot will build it now');
+        await buildMMStructure();
+    }
+    console.log('----------------- Start watching price -----------------');
+    checkForMovement();
 }
 
 async function buildMMStructure() {
+    console.log(config, sources);
     if (!fetchedAllPrices) {
         console.log('Waiting for all prices ...');
         await timeout(1000);
@@ -132,7 +148,7 @@ async function buildMMStructure() {
         console.log('\nAllow Taker Orders: ' + config.allowTaker + '\n');
 
         let currentSellPrice = averagePrice;
-        for (let i=0; i < config.sellSpreads.length; i++) {
+        for (let i = 0; i < config.sellSpreads.length; i++) {
             currentSellPrice = (currentSellPrice * (1 + config.sellSpreads[i] / 100)).toFixed(pricePrecision);
             const amount = (config.sellLots[i] / currentSellPrice).toFixed(amountPrecision);
 
@@ -152,7 +168,7 @@ async function buildMMStructure() {
         console.log('\n');
 
         let currentBuyPrice = averagePrice;
-        for (let i=0; i < config.buySpreads.length; i++) {
+        for (let i = 0; i < config.buySpreads.length; i++) {
             currentBuyPrice = (currentBuyPrice * (1 - config.buySpreads[i] / 100)).toFixed(pricePrecision);
             const amount = (config.buyLots[i] / currentBuyPrice).toFixed(amountPrecision);
 
