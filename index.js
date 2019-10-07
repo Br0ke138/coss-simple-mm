@@ -100,7 +100,6 @@ async function startBot() {
 }
 
 async function buildMMStructure() {
-    console.log(config, sources);
     if (!fetchedAllPrices) {
         console.log('Waiting for all prices ...');
         await timeout(1000);
