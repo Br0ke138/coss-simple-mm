@@ -8,6 +8,6 @@
     "CONFIG_PUBLIC_KEY": {
       "description": "Your public key",
       "value": ""
-    },
-  },
+    }
+  }
 }
